@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><span class="me-2">⚙️</span>Settings</h1>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                <span class="me-1">←</span>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Ping Settings -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><span class="me-2">⚙️</span>Настройки пинга</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('update_ping_settings') }}" class="settings-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ping_interval" class="form-label">Интервал пинга (сек)</label>
+                            <input type="number" class="form-control form-control-md" id="ping_interval" name="ping_interval" 
+                                   value="{{ ping_settings.ping_interval }}" min="5" max="3600" required>
+                            <div class="form-text">От 5 до 3600</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="timeout" class="form-label">Таймаут (сек)</label>
+                            <input type="number" class="form-control form-control-md" id="timeout" name="timeout" 
+                                   value="{{ ping_settings.timeout }}" min="1" max="30" required>
+                            <div class="form-text">От 1 до 30</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="max_retries" class="form-label">Попытки</label>
+                            <input type="number" class="form-control form-control-sm" id="max_retries" name="max_retries" 
+                                   value="{{ ping_settings.max_retries }}" min="1" max="10" required>
+                            <div class="form-text">От 1 до 10</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="max_threads" class="form-label">Потоки</label>
+                            <input type="number" class="form-control form-control-md" id="max_threads" name="max_threads" 
+                                   value="{{ ping_settings.max_threads or 50 }}" min="1" max="200" required>
+                            <div class="form-text">От 1 до 200</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="batch_size" class="form-label">Размер пакета</label>
+                            <input type="number" class="form-control form-control-md" id="batch_size" name="batch_size" 
+                                   value="{{ ping_settings.batch_size or 100 }}" min="10" max="1000" required>
+                            <div class="form-text">От 10 до 1000 адресов</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Автооптимизация</label>
+                            <form method="POST" action="{{ url_for('optimize_ping_settings') }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-info">
+                                    <span class="me-1">✨</span>Оптимизировать
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="resetDefaults">
+                                <span class="me-1">↩️</span>Сброс
+                            </button>
+                            <div class="form-text">Для текущего количества адресов</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <div class="text-muted small">
+                                <span class="me-1">ℹ️</span>
+                                Асинхронный пинг до 10000+ адресов
+                            </div>
+                            <div class="text-muted small">
+                                <span class="me-1">⚡</span>
+                                Автоматическая оптимизация под нагрузку
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="submit" class="btn btn-primary">
+                            <span class="me-1">💾</span>Сохранить
+                        </button>
+                        <a href="{{ url_for('start_scheduler') }}" class="btn btn-success">
+                            <span class="me-1">▶️</span>Запустить
+                        </a>
+                        <a href="{{ url_for('stop_scheduler') }}" class="btn btn-danger">
+                            <span class="me-1">⏹️</span>Остановить
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monitoring Configuration -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><span class="me-2">📡</span>Monitoring Configuration</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card bg-primary bg-opacity-10">
+                            <div class="card-body text-center">
+                                <span class="text-primary mb-2" style="font-size: 2rem;">🌐</span>
+                                <h6 class="text-primary">Subnet Optimization</h6>
+                                <p class="text-muted small">
+                                    Consecutive IP addresses are automatically grouped into subnets for efficient monitoring.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-warning bg-opacity-10">
+                            <div class="card-body text-center">
+                                <span class="text-warning mb-2" style="font-size: 2rem;">📋</span>
+                                <h6 class="text-warning">Status Change Detection</h6>
+                                <p class="text-muted small">
+                                    All ping results are logged with special filtering for status changes.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-info bg-opacity-10">
+                            <div class="card-body text-center">
+                                <span class="text-info mb-2" style="font-size: 2rem;">🗄️</span>
+                                <h6 class="text-info">SQLite Database</h6>
+                                <p class="text-muted small">
+                                    All network addresses and ping logs are stored in a local SQLite database.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import/Export Database -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><span class="me-2">📊</span>Импорт/Экспорт базы данных</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Экспорт данных</h6>
+                        <p class="text-muted">
+                            Экспорт всех данных из базы данных в формате Excel (.xlsx).
+                            Включает сетевые адреса, логи пингов и сетевые интерфейсы.
+                        </p>
+                        <a href="{{ url_for('export_database') }}" class="btn btn-success">
+                            <span class="me-1">📥</span>Экспортировать в Excel
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Импорт адресов</h6>
+                        <p class="text-muted">
+                            Импорт сетевых адресов из файла Excel (.xlsx).
+                            Файл должен содержать лист "Network Addresses" с соответствующими колонками.
+                        </p>
+                        <form method="POST" action="{{ url_for('import_database') }}" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <input type="file" class="form-control" name="file" accept=".xlsx" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <span class="me-1">📤</span>Импортировать из Excel
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Application Info -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><span class="me-2">ℹ️</span>Информация о приложении</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Функции</h6>
+                        <ul class="list-unstyled">
+                            <li><span class="text-success me-2">✅</span>Мониторинг ICMP пингов</li>
+                            <li><span class="text-success me-2">✅</span>Оптимизация подсетей</li>
+                            <li><span class="text-success me-2">✅</span>Обновления статуса в реальном времени</li>
+                            <li><span class="text-success me-2">✅</span>Логирование истории пингов</li>
+                            <li><span class="text-success me-2">✅</span>Фильтрация изменений статуса</li>
+                            <li><span class="text-success me-2">✅</span>Импорт/экспорт Excel</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Технологии</h6>
+                        <ul class="list-unstyled">
+                            <li><span class="text-info me-2">💻</span>Flask (Python)</li>
+                            <li><span class="text-info me-2">🗄️</span>SQLite</li>
+                            <li><span class="text-info me-2">🌐</span>python-nmap</li>
+                            <li><span class="text-info me-2">⏰</span>APScheduler</li>
+                            <li><span class="text-info me-2">🎨</span>Bootstrap 5</li>
+                            <li><span class="text-info me-2">📊</span>OpenPyXL</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{
+  "groups": {
+    "system": {
+      "name": "Системные адреса",
+      "description": "Локальные и системные IP-адреса",
+      "addresses": [
+        "10.12.0.151"
+      ],
+      "protected": true
+    },
+    "user": {
+      "name": "Пользовательские адреса",
+      "description": "Разрешенные пользовательские IP-адреса",
+      "addresses": [],
+      "protected": false
+    },
+    "networks": {
+      "name": "Сетевые подсети",
+      "description": "Разрешенные сетевые подсети",
+      "addresses": [],
+      "protected": false
+    }
+  },
+  "enabled": true,
+  "last_updated": "2025-07-18T17:22:31.532723",
+  "updated_by": "system"
+}

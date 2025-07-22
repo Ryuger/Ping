@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Ping Logs - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><span class="me-2">📊</span>Ping Logs</h1>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                <span class="me-1">←</span>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><span class="me-2">🔍</span>Filters</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('logs') }}">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="address_id" class="form-label">Network Address</label>
+                            <select class="form-select" name="address_id" id="address_id">
+                                <option value="">All Addresses</option>
+                                {% for address in addresses %}
+                                <option value="{{ address.id }}" 
+                                        {% if address.id == selected_address_id %}selected{% endif %}>
+                                    {{ address.ip_address }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="limit" class="form-label">Limit</label>
+                            <select class="form-select" name="limit" id="limit">
+                                <option value="50" {% if limit == 50 %}selected{% endif %}>50</option>
+                                <option value="100" {% if limit == 100 %}selected{% endif %}>100</option>
+                                <option value="200" {% if limit == 200 %}selected{% endif %}>200</option>
+                                <option value="500" {% if limit == 500 %}selected{% endif %}>500</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="status_changes_only" 
+                                       id="status_changes_only" value="true" 
+                                       {% if status_changes_only %}checked{% endif %}>
+                                <label class="form-check-label" for="status_changes_only">
+                                    Status Changes Only
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">
+                                <span class="me-1">🔍</span>Filter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logs Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <span class="me-2">📋</span>
+                    Ping Results
+                    {% if status_changes_only %}
+                        <span class="badge bg-info ms-2">Status Changes Only</span>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if ping_logs %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>IP Address</th>
+                                    <th>Status</th>
+                                    <th>Response Time</th>
+                                    <th>Error Message</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in ping_logs %}
+                                <tr>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="me-2">🖥️</span>
+                                        {{ log.network_address.ip_address }}
+                                    </td>
+                                    <td>
+                                        {% if log.status == 'up' %}
+                                            <span class="badge bg-success">
+                                                <span class="me-1">✅</span>Online
+                                            </span>
+                                        {% elif log.status == 'down' %}
+                                            <span class="badge bg-danger">
+                                                <span class="me-1">❌</span>Offline
+                                            </span>
+                                        {% elif log.status == 'error' %}
+                                            <span class="badge bg-warning">
+                                                <span class="me-1">⚠️</span>Error
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <span class="me-1">❓</span>{{ log.status }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.response_time %}
+                                            <span class="badge bg-info">{{ "%.2f"|format(log.response_time) }}ms</span>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.error_message %}
+                                            <small class="text-danger">{{ log.error_message }}</small>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <span class="text-muted mb-3" style="font-size: 3rem;">📋</span>
+                        <h4>No ping logs found</h4>
+                        <p class="text-muted">
+                            {% if status_changes_only %}
+                                No status changes recorded with current filters.
+                            {% else %}
+                                No ping logs available with current filters.
+                            {% endif %}
+                        </p>
+                        <a href="{{ url_for('logs') }}" class="btn btn-primary">
+                            <span class="me-1">🔄</span>Clear Filters
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log Stats -->
+{% if ping_logs %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><span class="me-2">📊</span>Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">Total Logs</h6>
+                            <h4 class="text-primary">{{ ping_logs|length }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">Online</h6>
+                            <h4 class="text-success">{{ ping_logs|selectattr('status', 'equalto', 'up')|list|length }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">Offline</h6>
+                            <h4 class="text-danger">{{ ping_logs|selectattr('status', 'equalto', 'down')|list|length }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">Errors</h6>
+                            <h4 class="text-warning">{{ ping_logs|selectattr('status', 'equalto', 'error')|list|length }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

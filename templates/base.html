@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Network Monitor{% endblock %}</title>
+    
+    <!-- Bootstrap CSS - Local file with fallback -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}"
+          onerror="this.onerror=null; this.href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css'">
+    
+    <!-- Font Awesome Icons removed - using emoji instead -->
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="minimal-nav">
+        <div class="container">
+            <div class="nav-container">
+                <a class="nav-brand" href="{{ url_for('index') }}">
+                    Network Monitor
+                </a>
+                
+                <ul class="nav-links">
+                    {% if current_user.is_authenticated %}
+                        <li><a class="{{ 'active' if request.endpoint == 'index' }}" href="{{ url_for('index') }}">Главная</a></li>
+                        <li><a class="{{ 'active' if request.endpoint == 'logs' }}" href="{{ url_for('logs') }}">Логи</a></li>
+                        {% if current_user.can_change_settings() %}
+                            <li><a class="{{ 'active' if request.endpoint == 'settings' }}" href="{{ url_for('settings') }}">Настройки</a></li>
+                        {% endif %}
+                        {% if current_user.can_manage_users() %}
+                            <li><a class="{{ 'active' if request.endpoint == 'user_management' }}" href="{{ url_for('user_management') }}">Пользователи</a></li>
+                        {% endif %}
+                        {% if current_user.can_manage_ip_whitelist() %}
+                            <li><a class="{{ 'active' if request.endpoint == 'ip_whitelist' }}" href="{{ url_for('ip_whitelist') }}">Белый список IP</a></li>
+                        {% endif %}
+                        {% if current_user.can_change_settings() %}
+                            <li><a class="{{ 'active' if request.endpoint == 'audit_log' }}" href="{{ url_for('audit_log') }}">Журнал аудита</a></li>
+                        {% endif %}
+                        <li class="user-menu">
+                            <div class="user-dropdown">
+                                <a href="{{ url_for('change_password') }}" class="user-link">
+                                    <span>👤</span>
+                                    {{ current_user.username }}
+                                </a>
+                                <div class="user-dropdown-content">
+                                    <a href="{{ url_for('change_password') }}">Изменить пароль</a>
+                                    <a href="{{ url_for('logout') }}">Выйти</a>
+                                </div>
+                            </div>
+                        </li>
+                    {% else %}
+                        <li><a href="{{ url_for('login') }}">Вход</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }}" style="margin-top: 20px; padding: 15px; border-radius: 6px; background: {{ '#f8d7da' if category == 'error' else '#d4edda' if category == 'success' else '#fff3cd' }}; border: 1px solid {{ '#f5c6cb' if category == 'error' else '#c3e6cb' if category == 'success' else '#ffeaa7' }};">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Main Content -->
+    <main class="container main-content">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Bootstrap JavaScript - Local file with fallback -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}" 
+            onerror="this.onerror=null; this.src='https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js'"></script>
+    
+    <!-- Socket.IO - Local file with fallback -->
+    <script src="{{ url_for('static', filename='js/socket.io.js') }}" 
+            onerror="this.onerror=null; this.src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js'"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    
+
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

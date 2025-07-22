@@ -1,0 +1,177 @@
+/* Custom styles for Network Monitor */
+
+/* Status indicators */
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.status-up {
+    background-color: var(--bs-success);
+}
+
+.status-down {
+    background-color: var(--bs-danger);
+}
+
+.status-unknown {
+    background-color: var(--bs-secondary);
+}
+
+.status-error {
+    background-color: var(--bs-warning);
+}
+
+/* Card hover effects */
+.card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+/* Network interface cards */
+.card.border-primary {
+    border-width: 2px !important;
+}
+
+/* Responsive table improvements */
+.table-responsive {
+    border-radius: 0.375rem;
+}
+
+/* Custom badge styles */
+.badge {
+    font-size: 0.75em;
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Custom button styles */
+.btn-group .btn {
+    border-radius: 0.375rem;
+    margin-right: 0.25rem;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+/* Stats cards */
+.card.bg-success,
+.card.bg-danger,
+.card.bg-warning,
+.card.bg-info {
+    color: white;
+}
+
+.card.bg-success .card-body,
+.card.bg-danger .card-body,
+.card.bg-warning .card-body,
+.card.bg-info .card-body {
+    border-radius: 0.375rem;
+}
+
+/* Footer styles */
+footer {
+    margin-top: auto;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 0.25rem;
+        margin-right: 0;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+
+/* Dark mode specific adjustments */
+[data-bs-theme="dark"] .card {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-gray-700);
+}
+
+[data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: var(--bs-gray-800);
+}
+
+/* Animation for status changes */
+@keyframes statusChange {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.badge.animate {
+    animation: statusChange 0.5s ease-in-out;
+}
+
+/* Custom form styles */
+.form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* Network topology visualization */
+.network-topology {
+    min-height: 200px;
+    border: 1px dashed var(--bs-gray-600);
+    border-radius: 0.375rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bs-gray-100);
+}
+
+[data-bs-theme="dark"] .network-topology {
+    background-color: var(--bs-gray-800);
+}
+
+/* Ping result indicators */
+.ping-result {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ping-result .response-time {
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+
+/* Custom scrollbar for logs */
+.log-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.log-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.log-container::-webkit-scrollbar-track {
+    background: var(--bs-gray-200);
+    border-radius: 4px;
+}
+
+.log-container::-webkit-scrollbar-thumb {
+    background: var(--bs-gray-400);
+    border-radius: 4px;
+}
+
+.log-container::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-gray-500);
+}

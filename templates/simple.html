@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сетевой Монитор - Простая страница</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #404040;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .alert {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #155724;
+            color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #721c24;
+            color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #2a2a2a;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #404040;
+        }
+        th {
+            background-color: #3a3a3a;
+        }
+        .status-up {
+            color: #28a745;
+        }
+        .status-down {
+            color: #dc3545;
+        }
+        .status-unknown {
+            color: #ffc107;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            background-color: #3a3a3a;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Сетевой Монитор</h1>
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'error' if category == 'error' else 'success' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="card">
+            <h2>Добавить новый адрес</h2>
+            <form method="POST" action="/add_address">
+                <div class="form-group">
+                    <label for="ip_address">IP адрес:</label>
+                    <input type="text" id="ip_address" name="ip_address" placeholder="192.168.1.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="subnet_mask">Маска подсети (CIDR):</label>
+                    <input type="number" id="subnet_mask" name="subnet_mask" value="32" min="1" max="32" required>
+                </div>
+                <button type="submit" class="btn">Добавить адрес</button>
+            </form>
+        </div>
+        
+        <div class="card">
+            <h2>Мониторинг сети</h2>
+            {% if addresses %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>IP адрес</th>
+                            <th>Статус</th>
+                            <th>Последний пинг</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for address in addresses %}
+                        <tr>
+                            <td>{{ address.ip_address }}</td>
+                            <td>
+                                {% if address.last_status == 'up' %}
+                                    <span class="status-up">✓ Онлайн</span>
+                                {% elif address.last_status == 'down' %}
+                                    <span class="status-down">✗ Оффлайн</span>
+                                {% else %}
+                                    <span class="status-unknown">? Неизвестно</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if address.last_ping_time %}
+                                    {{ address.last_ping_time.strftime('%Y-%m-%d %H:%M:%S') }}
+                                {% else %}
+                                    Никогда
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/ping_now/{{ address.id }}" class="btn">Пинг</a>
+                                <a href="/logs?address_id={{ address.id }}" class="btn">Логи</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Нет настроенных адресов для мониторинга.</p>
+            {% endif %}
+        </div>
+        
+        <div class="card">
+            <h2>Действия</h2>
+            <a href="/settings" class="btn">Настройки</a>
+            <a href="/logs" class="btn">Все логи</a>
+            <a href="/start_scheduler" class="btn">Запустить планировщик</a>
+            <a href="/stop_scheduler" class="btn">Остановить планировщик</a>
+        </div>
+    </div>
+</body>
+</html>

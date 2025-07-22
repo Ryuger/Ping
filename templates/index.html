@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Network Monitor{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <h1 style="font-size: 24px; font-weight: 600; color: var(--primary-color);">
+        Панель мониторинга сети
+    </h1>
+    <button class="btn btn-primary" onclick="toggleAddForm()">
+        <span>➕</span>Добавить адрес
+    </button>
+</div>
+
+<!-- Quick Add Form -->
+<div class="minimal-card" id="addForm" style="display: none;">
+    <div class="card-header">
+        <h2>Добавить IP адрес</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('add_address') }}" class="quick-form">
+            <div class="form-group">
+                <label for="quick_ip" class="form-label">IP адрес</label>
+                <input type="text" class="form-control form-control-md" id="quick_ip" name="ip_address" 
+                       placeholder="192.168.1.1" required>
+            </div>
+            <div class="form-group">
+                <label for="quick_group" class="form-label">Группа</label>
+                <input type="text" class="form-control form-control-md" id="quick_group" name="group_name" 
+                       placeholder="Основная" value="Основная">
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="visibility: hidden;">Действие</label>
+                <button type="submit" class="btn btn-primary">
+                    <span>➕</span>Добавить
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Status Summary -->
+<div class="status-grid">
+    <div class="status-item info" data-status="">
+        <div class="status-number">{{ addresses|length }}</div>
+        <div class="status-label">Всего</div>
+    </div>
+    <div class="status-item success" data-status="up">
+        <div class="status-number">{{ addresses|selectattr('last_status', 'equalto', 'up')|list|length }}</div>
+        <div class="status-label">Онлайн</div>
+    </div>
+    <div class="status-item danger" data-status="down">
+        <div class="status-number">{{ addresses|selectattr('last_status', 'equalto', 'down')|list|length }}</div>
+        <div class="status-label">Оффлайн</div>
+    </div>
+    <div class="status-item warning" data-status="error">
+        <div class="status-number">{{ addresses|selectattr('last_status', 'equalto', 'error')|list|length }}</div>
+        <div class="status-label">Ошибка</div>
+    </div>
+    <div class="status-item" data-status="unknown">
+        <div class="status-number">{{ addresses|selectattr('last_status', 'equalto', 'unknown')|list|length }}</div>
+        <div class="status-label">Неизвестно</div>
+    </div>
+</div>
+
+<!-- Network Addresses by Groups -->
+<div class="minimal-card">
+    <div class="card-header">
+        <h2><span style="margin-right: 10px;">🖥️</span>Сетевые адреса</h2>
+    </div>
+    <div class="card-body">
+        {% if grouped_addresses %}
+            <!-- Group Tabs -->
+            <div class="tab-nav" id="groupTabs">
+                {% for group_name in grouped_addresses.keys() %}
+                    <button class="tab-link{% if loop.first %} active{% endif %}" 
+                            onclick="showTab('group-{{ group_name|replace(' ', '-') }}')">
+                        {{ group_name }}
+                        <span class="tab-badge">{{ grouped_addresses[group_name]|length }}</span>
+                    </button>
+                {% endfor %}
+            </div>
+            
+            <!-- Tab Content -->
+            <div id="tabContent">
+                {% for group_name, group_addresses in grouped_addresses.items() %}
+                    <div class="tab-pane{% if loop.first %} active{% endif %}" 
+                         id="group-{{ group_name|replace(' ', '-') }}">
+                        
+                        <table class="minimal-table">
+                            <thead>
+                                <tr>
+                                    <th>IP адрес</th>
+                                    <th>Статус</th>
+                                    <th>Последний пинг</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for address in group_addresses %}
+                                <tr data-address-id="{{ address.id }}">
+                                    <td>
+                                        <span style="margin-right: 8px; color: var(--accent-color);">🖥️</span>
+                                        {{ address.ip_address }}
+                                    </td>
+                                    <td>
+                                        {% if address.last_status == 'up' %}
+                                            <span class="status-badge online">
+                                                <span>✅</span>Онлайн
+                                            </span>
+                                        {% elif address.last_status == 'down' %}
+                                            <span class="status-badge offline">
+                                                <span>❌</span>Оффлайн
+                                            </span>
+                                        {% elif address.last_status == 'error' %}
+                                            <span class="status-badge error">
+                                                <span>⚠️</span>Ошибка
+                                            </span>
+                                        {% else %}
+                                            <span class="status-badge unknown">
+                                                <span>❓</span>Неизвестно
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if address.last_ping_time %}
+                                            <small style="color: var(--dark-gray); font-family: monospace;">
+                                                {{ address.last_ping_time.strftime('%Y-%m-%d %H:%M:%S') }}
+                                            </small>
+                                        {% else %}
+                                            <small style="color: var(--dark-gray);">Никогда</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('ping_now', address_id=address.id) }}" 
+                                               class="btn btn-sm btn-secondary">
+                                                <span>📡</span>Пинг
+                                            </a>
+                                            <a href="{{ url_for('logs', address_id=address.id) }}" 
+                                               class="btn btn-sm btn-secondary">
+                                                <span>📋</span>Логи
+                                            </a>
+                                            <a href="{{ url_for('remove_address', address_id=address.id) }}" 
+                                               class="btn btn-sm btn-danger"
+                                               onclick="return confirm('Вы уверены, что хотите удалить этот адрес?')">
+                                                <span>🗑️</span>Удалить
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <span>🖥️</span>
+                <h3>Сетевые адреса не настроены</h3>
+                <p>Добавьте IP адреса для начала мониторинга сети.</p>
+                <button class="btn btn-primary" onclick="toggleAddForm()">
+                    <span>➕</span>Добавить первый адрес
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Toggle add form visibility
+function toggleAddForm() {
+    const form = document.getElementById('addForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+// Tab switching functionality
+function showTab(tabId) {
+    // Hide all tab panes
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    tabPanes.forEach(pane => pane.classList.remove('active'));
+    
+    // Remove active class from all tab links
+    const tabLinks = document.querySelectorAll('.tab-link');
+    tabLinks.forEach(link => link.classList.remove('active'));
+    
+    // Show selected tab pane
+    const selectedPane = document.getElementById(tabId);
+    if (selectedPane) {
+        selectedPane.classList.add('active');
+    }
+    
+    // Add active class to clicked tab link
+    event.target.classList.add('active');
+}
+
+// Status card filtering
+document.addEventListener('DOMContentLoaded', function() {
+    const statusCards = document.querySelectorAll('.status-item');
+    
+    statusCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const status = this.dataset.status;
+            
+            // Remove active class from all cards
+            statusCards.forEach(c => c.classList.remove('active'));
+            
+            // Add active class to clicked card
+            this.classList.add('active');
+            
+            // Show/hide table rows based on status
+            const tableRows = document.querySelectorAll('tbody tr[data-address-id]');
+            tableRows.forEach(row => {
+                const badge = row.querySelector('.status-badge');
+                if (!badge) return;
+                
+                if (status === '') {
+                    // Show all rows
+                    row.style.display = '';
+                } else if (status === 'up' && badge.classList.contains('online')) {
+                    row.style.display = '';
+                } else if (status === 'down' && badge.classList.contains('offline')) {
+                    row.style.display = '';
+                } else if (status === 'error' && badge.classList.contains('error')) {
+                    row.style.display = '';
+                } else if (status === 'unknown' && badge.classList.contains('unknown')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+
+// Auto-refresh the page every 30 seconds to show updated status
+setInterval(function() {
+    // Only refresh if add form is not visible
+    const addForm = document.getElementById('addForm');
+    if (addForm && addForm.style.display === 'none') {
+        location.reload();
+    }
+}, 30000);
+
+// Handle form submission with validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('#addForm form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const ipInput = document.getElementById('quick_ip');
+            
+            // Basic validation
+            if (!ipInput.value.trim()) {
+                alert('Пожалуйста, введите IP адрес');
+                e.preventDefault();
+                return false;
+            }
+            
+            // IP validation regex
+            const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+            if (!ipRegex.test(ipInput.value.trim())) {
+                alert('Пожалуйста, введите корректный IP адрес');
+                e.preventDefault();
+                return false;
+            }
+            
+            return true;
+        });
+    }
+});
+
+// CSS for tab panes
+document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}
